@@ -1,0 +1,137 @@
+-- Ronald Picard
+-- Assignment 6 -- BONUS
+-- 2019-04-17
+
+
+MODULE main
+  VAR
+
+    -- Variables
+    elevator_floor : {1,2,3,moving};
+    elevator_door: {closed, transitioning, open};
+    floor1_doors: {closed, transitioning, open};
+    floor2_doors: {closed, transitioning, open};
+    floor3_doors: {closed, transitioning, open};
+    floor1: {requested, not_requested};
+    floor2: {requested, not_requested};
+    floor3: {requested, not_requested};
+    floor1_wait_period: {0,1,2,3,4,5,6,7,8,9};
+    floor2_wait_period: {0,1,2,3,4,5,6,7,8,9};
+    floor3_wait_period: {0,1,2,3,4,5,6,7,8,9};
+    
+
+
+  ASSIGN
+    next(elevator_floor) := case
+                    (elevator_floor = 1) & ((floor1 = not_requested) | (floor1_wait_period != 0)) & (elevator_door = closed) & ( (floor2 = requested) | (floor3 = requested) ) : moving;
+                    (elevator_floor = 2) & ((floor2 = not_requested) | (floor2_wait_period != 0)) & (elevator_door = closed) & ( (floor1 = requested) | (floor3 = requested) ) : moving;
+                    (elevator_floor = 3) & ((floor3 = not_requested) | (floor3_wait_period != 0)) & (elevator_door = closed) & ( (floor1 = requested) | (floor2 = requested) ) : moving;
+                    (elevator_floor = moving) & (floor1_wait_period = 0) & (floor1 = requested) : 1; --nondeterministic
+                    (elevator_floor = moving) & (floor2_wait_period = 0) & (floor2 = requested) : 2; --nondeterministic
+                    (elevator_floor = moving) & (floor3_wait_period = 0) & (floor3 = requested) : 3; --nondeterministic
+                    TRUE : elevator_floor; -- stay same otherwise
+                esac;
+    next(elevator_door)    := case
+                    (elevator_floor = 1) & (floor1 = requested) & (floor1_wait_period = 0) & (elevator_door = closed) : transitioning;
+                    (elevator_floor = 2) & (floor2 = requested) & (floor2_wait_period = 0) & (elevator_door = closed) : transitioning;
+                    (elevator_floor = 3) & (floor3 = requested) & (floor3_wait_period = 0) & (elevator_door = closed) : transitioning;
+                    (elevator_door = transitioning) : open;
+                    (elevator_floor = 1) & (floor1 = not_requested) & (elevator_door = open) : closed;
+                    (elevator_floor = 2) & (floor2 = not_requested) & (elevator_door = open) : closed;
+                    (elevator_floor = 3) & (floor3 = not_requested) & (elevator_door = open) : closed;
+                    TRUE : elevator_door;
+                esac;
+    next(floor1_wait_period)    := case
+                    --(elevator_floor = 1) & (floor1 = requested) & (elevator_door = closed) : on;
+                    (elevator_floor = 1) & (floor1 = not_requested) & (elevator_door = open) : 9;
+                    (floor1_wait_period != 0) : floor1_wait_period - 1;
+                    TRUE : floor1_wait_period;
+                esac;
+    next(floor2_wait_period)    := case
+                    --(elevator_floor = 2) & (floor2 = requested) & (elevator_door = closed) : on;
+                    (elevator_floor = 2) & (floor2 = not_requested) & (elevator_door = open) : 9;
+                    (floor2_wait_period != 0) : floor2_wait_period - 1;
+                    TRUE : floor2_wait_period;
+                esac;
+    next(floor3_wait_period)    := case
+                    --(elevator_floor = 3) & (floor3 = requested) & (elevator_door = closed) : on;
+                    (elevator_floor = 3) & (floor3 = not_requested) & (elevator_door = open) : 9;
+                    (floor3_wait_period != 0) : floor3_wait_period - 1;
+                    TRUE : floor3_wait_period;
+                esac;
+    next(floor1_doors)    := case
+                    (elevator_floor = 1) & (floor1 = requested) & (floor1_wait_period = 0) & (elevator_door = closed) : transitioning;
+                    (floor1_doors = transitioning) : open;
+                    (elevator_floor = 1) & (floor1 = not_requested) & (elevator_door = open) : closed;
+                    TRUE : floor1_doors;
+                esac;
+    next(floor2_doors)    := case
+                    (elevator_floor = 2) & (floor2 = requested) & (floor2_wait_period = 0) & (elevator_door = closed) : transitioning;
+                    (floor2_doors = transitioning) : open;
+                    (elevator_floor = 2) & (floor2 = not_requested) & (elevator_door = open) : closed;
+                    TRUE : floor2_doors;
+                esac;
+    next(floor3_doors)    := case
+                    (elevator_floor = 3) & (floor3 = requested) & (floor3_wait_period = 0) & (elevator_door = closed) : transitioning;
+                    (floor3_doors = transitioning) : open;
+                    (elevator_floor = 3) & (floor3 = not_requested) & (elevator_door = open) : closed;
+                    TRUE : floor3_doors;
+                esac;
+    next(floor1)    := case
+                    (elevator_floor = 1) & (floor1 = requested) & (elevator_door = open) & (elevator_door = open) : not_requested;
+                    !((elevator_floor = 1) & (floor1 = requested) & (elevator_door = open) & (elevator_door = open)) : requested; --nondeterministic
+                    !((elevator_floor = 1) & (floor1 = requested) & (elevator_door = open) & (elevator_door = open)) : not_requested; --nondeterministic
+                    TRUE : floor1;
+                esac;
+    next(floor2)    := case
+                    (elevator_floor = 2) & (floor2 = requested) & (elevator_door = open) & (elevator_door = open) : not_requested;
+                    !((elevator_floor = 2) & (floor2 = requested) & (elevator_door = open) & (elevator_door = open)) : requested; --nondeterministic
+                    !((elevator_floor = 2) & (floor2 = requested) & (elevator_door = open) & (elevator_door = open)) : not_requested; --nondeterministic
+                    TRUE : floor2;
+                esac;
+    next(floor3)    := case
+                    (elevator_floor = 3) & (floor3 = requested) & (elevator_door = open) & (elevator_door = open) : not_requested;
+                    !((elevator_floor = 3) & (floor3 = requested) & (elevator_door = open) & (elevator_door = open)) : requested; --nondeterministic
+                    !((elevator_floor = 3) & (floor3 = requested) & (elevator_door = open) & (elevator_door = open)) : not_requested; --nondeterministic
+                    TRUE : floor2;
+                esac;
+
+    -- Initial States
+    init(elevator_floor) := 1;
+    init(elevator_door) := open;
+    init(floor1_doors) := open;
+    init(floor2_doors) := closed;
+    init(floor3_doors) := closed;
+    init(floor1) := not_requested;
+    init(floor2) := not_requested;
+    init(floor3) := not_requested;
+    init(floor1_wait_period) := 0;
+    init(floor2_wait_period) := 0;
+    init(floor3_wait_period) := 0;
+    
+-- Properties
+
+-- Requirement i - It is always the case that if an elevator car is not at a particular floor, then the doors to the corresponding elevator shaft on that floor are closed.
+LTLSPEC
+  G (((elevator_floor != 1) -> (floor1_doors = closed)) & ((elevator_floor != 2) -> (floor2_doors = closed)) & ((elevator_floor != 3) -> (floor3_doors = closed)));
+
+-- Requirement ii - It is always the case that if an elevator car is at a particular floor AND that floor has been requested, then eventually both the doors to the corresponding elevator shaft on that floor open and the doors to the elevator car open.
+LTLSPEC
+  G ((((elevator_floor = 1) & (floor1 = requested)) -> F ((elevator_door = open) & (floor1_doors = open))) & (((elevator_floor = 2) & (floor2 = requested)) -> F ((elevator_door = open) & (floor2_doors = open))) & (((elevator_floor = 3) & (floor3 = requested)) -> F ((elevator_door = open) & (floor3_doors = open))));
+
+-- Requirement iii - It is always the case that if an elevator car is moving, then the doors to the corresponding elevator shaft are closed on every floor.
+LTLSPEC
+  G ((elevator_floor = moving) -> ((floor1_doors = closed) & (floor2_doors = closed) & (floor3_doors = closed)));
+
+-- Requirement iv - It is always the case that if an elevator car is requested to go to a particular floor, then eventually the elevator car arrives at that floor.
+LTLSPEC
+  G (((floor1 = requested) -> F (elevator_floor = 1)) & ((floor2 = requested) -> F (elevator_floor = 2)) & ((floor3 = requested) -> F (elevator_floor = 3)));
+
+-- Requirement v - It is always the case that, for any floor, the elevator car doors are closed if and only if the elevator shaft doors are closed on that floor.
+LTLSPEC
+  G ( (((((elevator_floor = 1) & (elevator_door = closed)) -> (floor1_doors = closed))) & ((((elevator_floor = 1) & (floor1_doors = closed)) -> (elevator_door = closed)))) & (((((elevator_floor = 2) & (elevator_door = closed)) -> (floor2_doors = closed))) & ((((elevator_floor = 2) & (floor2_doors = closed)) -> (elevator_door = closed)))) &(((((elevator_floor = 3) & (elevator_door = closed)) -> (floor3_doors = closed))) & ((((elevator_floor = 3) & (floor3_doors = closed)) -> (elevator_door = closed)))) );
+
+-- Requirement vi - The elevator shaft doors on different floors are never simultaneously open.
+LTLSPEC
+  G ( ((floor1_doors = open) -> ((floor2_doors = closed) & (floor3_doors = closed))) & ((floor2_doors = open) -> ((floor1_doors = closed) & (floor3_doors = closed))) & ((floor3_doors = open) -> ((floor1_doors = closed) & (floor2_doors = closed))) );
+
