@@ -15,38 +15,61 @@ MODULE main
     floor1: {requested, not_requested};
     floor2: {requested, not_requested};
     floor3: {requested, not_requested};
+    floor1_wait_period: {0,1,2,3,4,5,6,7};
+    floor2_wait_period: {0,1,2,3,4,5,6,7};
+    floor3_wait_period: {0,1,2,3,4,5,6,7};
     
+
+
   ASSIGN
     next(elevator_floor) := case
-                    (elevator_floor = 1) & (floor1 = not_requested) & (elevator_door = closed) & ( (floor2 = requested) | (floor3 = requested) ) : moving;
-                    (elevator_floor = 2) & (floor2 = not_requested) & (elevator_door = closed) & ( (floor1 = requested) | (floor3 = requested) ) : moving;
-                    (elevator_floor = 3) & (floor3 = not_requested) & (elevator_door = closed) & ( (floor1 = requested) | (floor2 = requested) ) : moving;
-                    (elevator_floor = moving) & (floor1 = requested) : 1; --nondeterministic
-                    (elevator_floor = moving) & (floor2 = requested) : 2; --nondeterministic
-                    (elevator_floor = moving) & (floor3 = requested) : 3; --nondeterministic
+                    (elevator_floor = 1) & ((floor1 = not_requested) | (floor1_wait_period != 0)) & (elevator_door = closed) & ( (floor2 = requested) | (floor3 = requested) ) : moving;
+                    (elevator_floor = 2) & ((floor2 = not_requested) | (floor2_wait_period != 0)) & (elevator_door = closed) & ( (floor1 = requested) | (floor3 = requested) ) : moving;
+                    (elevator_floor = 3) & ((floor3 = not_requested) | (floor3_wait_period != 0)) & (elevator_door = closed) & ( (floor1 = requested) | (floor2 = requested) ) : moving;
+                    (elevator_floor = moving) & (floor1_wait_period = 0) & (floor1 = requested) : 1; --nondeterministic
+                    (elevator_floor = moving) & (floor2_wait_period = 0) & (floor2 = requested) : 2; --nondeterministic
+                    (elevator_floor = moving) & (floor3_wait_period = 0) & (floor3 = requested) : 3; --nondeterministic
                     TRUE : elevator_floor; -- stay same otherwise
                 esac;
     next(elevator_door)    := case
-                    (elevator_floor = 1) & (floor1 = requested) & (elevator_door = closed) : open;
-                    (elevator_floor = 2) & (floor2 = requested) & (elevator_door = closed) : open;
-                    (elevator_floor = 3) & (floor3 = requested) & (elevator_door = closed) : open;
+                    (elevator_floor = 1) & (floor1 = requested) & (floor1_wait_period = 0) & (elevator_door = closed) : open;
+                    (elevator_floor = 2) & (floor2 = requested) & (floor2_wait_period = 0) & (elevator_door = closed) : open;
+                    (elevator_floor = 3) & (floor3 = requested) & (floor3_wait_period = 0) & (elevator_door = closed) : open;
                     (elevator_floor = 1) & (floor1 = not_requested) & (elevator_door = open) : closed;
                     (elevator_floor = 2) & (floor2 = not_requested) & (elevator_door = open) : closed;
                     (elevator_floor = 3) & (floor3 = not_requested) & (elevator_door = open) : closed;
                     TRUE : elevator_door;
                 esac;
+    next(floor1_wait_period)    := case
+                    --(elevator_floor = 1) & (floor1 = requested) & (elevator_door = closed) : on;
+                    (elevator_floor = 1) & (floor1 = not_requested) & (elevator_door = open) : 7;
+                    (floor1_wait_period != 0) : floor1_wait_period - 1;
+                    TRUE : floor1_wait_period;
+                esac;
+    next(floor2_wait_period)    := case
+                    --(elevator_floor = 2) & (floor2 = requested) & (elevator_door = closed) : on;
+                    (elevator_floor = 2) & (floor2 = not_requested) & (elevator_door = open) : 7;
+                    (floor2_wait_period != 0) : floor2_wait_period - 1;
+                    TRUE : floor2_wait_period;
+                esac;
+    next(floor3_wait_period)    := case
+                    --(elevator_floor = 3) & (floor3 = requested) & (elevator_door = closed) : on;
+                    (elevator_floor = 3) & (floor3 = not_requested) & (elevator_door = open) : 7;
+                    (floor3_wait_period != 0) : floor3_wait_period - 1;
+                    TRUE : floor3_wait_period;
+                esac;
     next(floor1_doors)    := case
-                    (elevator_floor = 1) & (floor1 = requested) & (elevator_door = closed) : open;
+                    (elevator_floor = 1) & (floor1 = requested) & (floor1_wait_period = 0) & (elevator_door = closed) : open;
                     (elevator_floor = 1) & (floor1 = not_requested) & (elevator_door = open) : closed;
                     TRUE : floor1_doors;
                 esac;
     next(floor2_doors)    := case
-                    (elevator_floor = 2) & (floor2 = requested) & (elevator_door = closed) : open;
+                    (elevator_floor = 2) & (floor2 = requested) & (floor2_wait_period = 0) & (elevator_door = closed) : open;
                     (elevator_floor = 2) & (floor2 = not_requested) & (elevator_door = open) : closed;
                     TRUE : floor2_doors;
                 esac;
     next(floor3_doors)    := case
-                    (elevator_floor = 3) & (floor3 = requested) & (elevator_door = closed) : open;
+                    (elevator_floor = 3) & (floor3 = requested) & (floor3_wait_period = 0) & (elevator_door = closed) : open;
                     (elevator_floor = 3) & (floor3 = not_requested) & (elevator_door = open) : closed;
                     TRUE : floor3_doors;
                 esac;
@@ -78,7 +101,10 @@ MODULE main
     init(floor1) := not_requested;
     init(floor2) := not_requested;
     init(floor3) := not_requested;
-
+    init(floor1_wait_period) := 0;
+    init(floor2_wait_period) := 0;
+    init(floor3_wait_period) := 0;
+    
 -- Properties
 
 -- Requirement i - It is always the case that if an elevator car is not at a particular floor, then the doors to the corresponding elevator shaft on that floor are closed.
