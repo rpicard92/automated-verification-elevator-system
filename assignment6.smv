@@ -41,13 +41,13 @@ MODULE main
                     TRUE : floor1_doors;
                 esac;
     next(floor2_doors)    := case
-                    (elevator_floor = 1) & (floor2 = requested) & (elevator_door = closed) : open;
-                    (elevator_floor = 1) & (floor2 = not_requested) & (elevator_door = open) : closed;
+                    (elevator_floor = 2) & (floor2 = requested) & (elevator_door = closed) : open;
+                    (elevator_floor = 2) & (floor2 = not_requested) & (elevator_door = open) : closed;
                     TRUE : floor2_doors;
                 esac;
     next(floor3_doors)    := case
-                    (elevator_floor = 1) & (floor3 = requested) & (elevator_door = closed) : open;
-                    (elevator_floor = 1) & (floor3 = not_requested) & (elevator_door = open) : closed;
+                    (elevator_floor = 3) & (floor3 = requested) & (elevator_door = closed) : open;
+                    (elevator_floor = 3) & (floor3 = not_requested) & (elevator_door = open) : closed;
                     TRUE : floor3_doors;
                 esac;
     next(floor1)    := case
